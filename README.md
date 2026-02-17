@@ -13,7 +13,8 @@ Program dilengkapi dengan antarmuka grafis (GUI) untuk visualisasi hasil solusi.
 
 **Requirement:**
 - Python 3.8 atau lebih tinggi
-- Tkinter 
+- Tkinter
+
 **Instalasi:**
 1. Clone atau download repository
 2. Tidak ada dependency eksternal yang perlu diinstall (hanya library standar Python)
