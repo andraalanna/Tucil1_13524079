@@ -93,6 +93,13 @@ class QueenGUIVisual:
             text = "Sedang",
             font = ("Arial", 9, "bold")
         )
+        
+        self.speed_warning = tk.Label(
+            self.speed_frame,
+            text = "Hindari Penggunaan Kecepatan 'Sangat Cepat' (Lag)",
+            font = ("Arial", 7),
+            fg = "gray"
+        )
 
         self.scale_kecepatan = ttk.Scale(
             self.speed_frame,
@@ -159,14 +166,6 @@ class QueenGUIVisual:
             xscrollcommand = self.h_scrollbar.set
         )
 
-        self.status_label = tk.Label(
-            self.right_panel,
-            text = "Ready",
-            font = ("Arial", 10),
-            anchor =tk.W,
-            pady = 5
-
-        )
 
 
         self.legenda_frame = ttk.LabelFrame(self.right_panel, text = "Legenda", padding=5)
@@ -189,6 +188,7 @@ class QueenGUIVisual:
         
         self.speed_frame.pack(fill=tk.X, pady=5)
         self.speed_value_label.pack()
+        self.speed_warning.pack()
         self.scale_kecepatan.pack(fill=tk.X, pady=5)
         self.speed_value_label.pack()
         
@@ -213,8 +213,6 @@ class QueenGUIVisual:
         
         self.legenda_frame.pack(fill=tk.X, pady=5)
         self.legenda_text.pack()
-        
-        self.status_label.pack(fill=tk.X, pady=2)
 
         self.root.columnconfigure(0, weight=1)
         self.root.columnconfigure(1, weight=3)  
@@ -362,7 +360,6 @@ class QueenGUIVisual:
         self.solve_btn.config(state=tk.DISABLED)
         self.select_file_btn.config(state=tk.DISABLED)
 
-        self.status_label.config(text="Dalam proses penyelesaian")
         self.stats_text.config(state=tk.NORMAL)
         self.stats_text.delete(1.0, tk.END)
         self.stats_text.config(state=tk.DISABLED)
@@ -423,7 +420,6 @@ class QueenGUIVisual:
         self.select_file_btn.config(state=tk.NORMAL)
 
         if result.found:
-            self.status_label.config(text="Solusi ditemukan!")
 
             posisi_queen = []
             for row in range(self.n):
@@ -446,7 +442,6 @@ class QueenGUIVisual:
             messagebox.showinfo("SUSKES!!!", f"DITEMUKAN SOLUSI!\n\nWaktu Pencarian: {result.waktu_eksekusi_ms:.3f} ms\n Banyak Kasus yang Ditinjau {result.jumlah_kasus} kasus.")
 
         else:
-            self.status_label.config(text="Tidak Ditemukan Solusi")
             
             self.stats_text.config(state=tk.NORMAL)
             self.stats_text.delete(1.0, tk.END)
@@ -464,8 +459,6 @@ class QueenGUIVisual:
 
         self.solve_btn.config(state=tk.NORMAL)
         self.select_file_btn.config(state=tk.NORMAL)
-        
-        self.status_label.config(text="Terjadi Error")
         messagebox.showerror("Error", f"Solver error:\n{error_msg}")
 
     def _save_solution(self):

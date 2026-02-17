@@ -24,14 +24,10 @@ class SolverUtama:
 
             
     def _semua_kombinasi(self, panjang: int)-> List[List[int]]:
-        if panjang == 0:
-            return [[]]
-        hasil = []
-        for sub in self._semua_kombinasi(panjang - 1):
-            for col in range(self.n):
-                hasil.append(sub + [col])
+        hasil = [[]]
+        for _ in range(panjang):
+            hasil = [prev + [col] for prev in hasil for col in range(self.n)]
         return hasil
-    
     def _bangun_lokasi_warna(self) -> Dict[str, List[Tuple[int, int]]]:
         map_warna = {}
         for row in range(self.n):
@@ -163,7 +159,8 @@ class SolverUtama:
                     board_snapshot = self._papan_ke_str()
                     visual_callback(board_snapshot, self.jumlah_kasus, posisi_queen[:])
 
-                if self._backtrack_visual(row+1, posisi_queen, visual_callback):  # ✅ FIX: Parameter diperbaiki!
+                if self._backtrack_visual(row+1, posisi_queen, visual_callback):
+    
                     return True
                 
                 posisi_queen.pop()
@@ -184,7 +181,7 @@ def validasi_ukuran_papan(papan: List[List[str]], n: int) -> Tuple[bool, str]:
         
     for row in range(n):
         for col in range(n):
-            if not papan[row][col].isalpha() or not papan[row][col].isupper():  # ✅ FIX: Tambahkan ()
+            if not papan[row][col].isalpha() or not papan[row][col].isupper(): 
                 return False, f"Papan tidak sesuai di posisi ({row}, {col}), hanya menerima huruf kapital A-Z!"
 
     return True, ""
