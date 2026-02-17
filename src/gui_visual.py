@@ -6,7 +6,7 @@ from threading import Thread
 import queue
 import time
 from typing import Optional
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import subprocess, tempfile, os
 
@@ -33,7 +33,6 @@ class QueenGUIVisual:
         self.root.geometry("1200x800") # formatnya ("lebarxtinggi+x+y") -> x + y itu kek lokasi
         root.minsize(1000,700)
 
-        # State
         self.papan = None
         self.n = 0
         self.solver = None
@@ -566,8 +565,6 @@ class QueenGUIVisual:
         cell = self.cell_size * scale
         img_w = n * cell
         img_h = n * cell
-
-        from PIL import Image, ImageDraw, ImageFont
 
         img = Image.new("RGB", (img_w, img_h), "white")
         draw = ImageDraw.Draw(img)
