@@ -21,6 +21,8 @@ class SolverUtama:
 
         self.papan_solusi = [row[:] for row in papan]
 
+
+            
     def _permutations(self, arr:List[int]) -> List[list[int]]:
         if len(arr)==0:
             return [[]]
@@ -223,4 +225,36 @@ def validasi_warna_papan(papan: List[List[str]], n: int) -> Dict[str, any]:
         'mungkin_ada_solusi': mungkin_ada_solusi,
         'pesan_warning': warning
     }
-    
+
+def cek_konek_warna(papan: List[List[str]]) -> Tuple[bool, List[str]]:
+    n = len(papan)
+    map_warna: Dict[str, List[Tuple[int, int]]] = {}
+    for row in range(n):
+        for col in range(n):
+            warna = papan[row][col]
+            if warna not in map_warna:
+                map_warna[warna] = []
+            map_warna[warna].append((row, col))
+    warna_terpisah = []
+
+    for warna, koordinats in map_warna.items():
+        if len(koordinats) == 1:
+            continue
+        sel_set = set(koordinats)
+        visited = set()
+        antrian = [koordinats[0]]
+        visited.add(koordinats[0])
+
+        while antrian:
+            rowA, colA = antrian.pop(0)
+            for r, c in [(-1,0), (1,0), (0,-1), (0,1)]:
+                tetangga = (r+rowA, c+colA)
+                if tetangga in sel_set and tetangga not in visited:
+                    visited.add(tetangga)
+                    antrian.append(tetangga)
+
+        if len(visited) != len(koordinats):
+            warna_terpisah.append(warna)
+
+    valid = len(warna_terpisah) == 0
+    return valid, warna_terpisah

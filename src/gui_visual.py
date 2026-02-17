@@ -13,7 +13,7 @@ import subprocess, tempfile, os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from solver_core import HasilSolusi,SolverUtama, validasi_warna_papan, validasi_ukuran_papan
+from solver_core import HasilSolusi,SolverUtama, validasi_warna_papan, validasi_ukuran_papan, cek_konek_warna
 from io_code import baca_file_papan, tulis_file_solusi, cek_folder
 
 class QueenGUIVisual:
@@ -112,25 +112,6 @@ class QueenGUIVisual:
             state = tk.DISABLED,
         )
 
-        self.stop_btn = ttk.Button(
-            self.control_frame,
-            text = "Stop",
-            command = self._stop_solving,
-            state = tk.DISABLED
-        )
-
-        self.reset_btn=ttk.Button(
-            self.control_frame,
-            text = "Reset Papan",
-            command = self._reset_papan,
-        )
-
-        self.clear_btn = ttk.Button(
-            self.control_frame,
-            text = "Clear Layar",
-            command = self._clear_all,
-        )
-
         self.save_btn = ttk.Button(
             self.control_frame,
             text = "Save Solusi",
@@ -213,9 +194,6 @@ class QueenGUIVisual:
         
         self.control_frame.pack(fill=tk.X, pady=5)
         self.solve_btn.pack(fill=tk.X, pady=2)
-        self.stop_btn.pack(fill=tk.X, pady=2)
-        self.reset_btn.pack(fill=tk.X, pady=2)
-        self.clear_btn.pack(fill=tk.X, pady=2)
         self.save_btn.pack(fill=tk.X, pady=2)
         
         self.stats_frame.pack(fill=tk.BOTH, expand=True, pady=5)
@@ -258,7 +236,9 @@ class QueenGUIVisual:
             
             self.cur_file = filepath
             is_valid, error_massage = validasi_ukuran_papan(self.papan, self.n)
-            
+            koneksi_valid, warna_terpisah = cek_konek_warna(self.papan)
+            if not koneksi_valid:
+                messagebox.showerror("Papan Tidak Valid", "Ada Warna yang terputus")
             if not is_valid:
                 messagebox.showerror("Papan Tidak Valid", error_massage)
                 return
@@ -286,12 +266,6 @@ class QueenGUIVisual:
         info = f"Ukuran Papan: {self.n} x {self.n} \n"
         info += f"Warna Unik : {analisis_warna['jum_warna']}\n"
         info += f"Semua Warna: {','.join(sorted(analisis_warna['semua_warna']))}\n\n"
-
-        if analisis_warna['pesan_warning']:
-            info += f" {analisis_warna['pesan_warning'][:100]}...\n"
-        else:
-            info += f"Papan kemungkinan dapat diselesaikan"
-
         self.info_text.insert(1.0, info)
         self.info_text.config(state=tk.DISABLED)
 
@@ -385,13 +359,10 @@ class QueenGUIVisual:
         
         self.is_solving = True
         self.result = None
-
-        # REFRSH UI
         self.solve_btn.config(state=tk.DISABLED)
-        self.stop_btn.config(state=tk.NORMAL)
         self.select_file_btn.config(state=tk.DISABLED)
 
-        self.status_label.config(text="Dalam proses penyelesaian...")
+        self.status_label.config(text="Dalam proses penyelesaian")
         self.stats_text.config(state=tk.NORMAL)
         self.stats_text.delete(1.0, tk.END)
         self.stats_text.config(state=tk.DISABLED)
@@ -449,7 +420,6 @@ class QueenGUIVisual:
         self.result = result
 
         self.solve_btn.config(state=tk.NORMAL)
-        self.stop_btn.config(state=tk.DISABLED)
         self.select_file_btn.config(state=tk.NORMAL)
 
         if result.found:
@@ -492,24 +462,12 @@ class QueenGUIVisual:
     def _handle_error(self, error_msg: str):
         self.is_solving=False
 
-        
         self.solve_btn.config(state=tk.NORMAL)
-        self.stop_btn.config(state=tk.DISABLED)
         self.select_file_btn.config(state=tk.NORMAL)
         
         self.status_label.config(text="Terjadi Error")
         messagebox.showerror("Error", f"Solver error:\n{error_msg}")
 
-    def _stop_solving(self):
-        self.is_solving = False
-        self.solve_btn.config(state=tk.NORMAL)
-        self.stop_btn.config(state=tk.DISABLED)
-        self.select_file_btn.config(state=tk.NORMAL)
-        
-        self.status_label.config(text="Proses dihentikan oleh USER")
-        
-        messagebox.showinfo("Stopped", "Proses berhenti.")
-    
     def _save_solution(self):
         if not self.result or not self.result.found:
             messagebox.showwarning("Peringatan", "Belum ada solusi untuk disimpan!")
@@ -604,65 +562,11 @@ class QueenGUIVisual:
 
         img.save(filepath)
 
-    def _reset_papan(self):
-        if self.papan is None:
-            messagebox.showinfo("Info", "Papan masih kosong. Pilih file terlebih dahulu.")
-            return
-        
-        if self.is_solving:
-            if not messagebox.askyesno("Yakin ni", "Stop proses sekarang ni ye?"):
-                return
-            self.is_solving = False
-        
-        self.result = None
-        
-        self._draw_board(self.papan, queens=None)
-        
-        self.stats_text.config(state=tk.NORMAL)
-        self.stats_text.delete(1.0, tk.END)
-        self.stats_text.config(state=tk.DISABLED)
-        
-        self.status_label.config(text="Siap dikerjain")
-        
-        self.solve_btn.config(state=tk.NORMAL)
-        self.save_btn.config(state=tk.DISABLED)
-        
-        messagebox.showinfo("Reset", "Papan direset! Queen diilangin.\nSiap dikerjain ulang")
-    
-    def _clear_all(self):
-        if self.is_solving:
-            if not messagebox.askyesno("Yakin Ni", "Stop proses sekarang ni ye?"):
-                return
-            self.is_solving = False
-        
-        self.papan = None
-        self.n = 0
-        self.result = None
-        
-        self.file_label.config(text="Silakan Pilih File dulu", fg="gray")
-        
-        self.info_text.config(state=tk.NORMAL)
-        self.info_text.delete(1.0, tk.END)
-        self.info_text.config(state=tk.DISABLED)
-        
-        self.stats_text.config(state=tk.NORMAL)
-        self.stats_text.delete(1.0, tk.END)
-        self.stats_text.config(state=tk.DISABLED)
-        
-        self.canvas.delete("all")
-        
-        self.status_label.config(text="")
-        self.status_label.config(text="Ready")
-        
-        self.solve_btn.config(state=tk.DISABLED)
-        self.save_btn.config(state=tk.DISABLED)
-
 def main():
 
     root = tk.Tk()
     app = QueenGUIVisual(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
