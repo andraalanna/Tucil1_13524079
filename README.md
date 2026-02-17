@@ -26,6 +26,12 @@ Program ini adalah program Python, tidak perlu dikompilasi. Cukup jalankan langs
 
 **Menjalankan Program:**
 ```bash
+cd Tuciil-STIMA-Brute-Force
+cd src
+python gui_visual.py
+```
+Atau jika sudah berada di folder `Tuciil-STIMA-Brute-Force`:
+```bash
 cd src
 python gui_visual.py
 ```
