@@ -9,7 +9,7 @@ class HasilSolusi:
     waktu_eksekusi_ms: float
     found: bool
 
-class QueenSolver:
+class SolverUtama:
     def __init__(self, papan: List[List[str]], n: int):
         self.papan_awal = papan
         self.n =  n

@@ -6,10 +6,14 @@ from threading import Thread
 import queue
 import time
 from typing import Optional
+from PIL import Image
+from io import BytesIO
+import subprocess, tempfile, os
+
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from solver_core import HasilSolusi,QueenSolver, validasi_warna_papan, validasi_ukuran_papan
+from solver_core import HasilSolusi,SolverUtama, validasi_warna_papan, validasi_ukuran_papan
 from io_code import baca_file_papan, tulis_file_solusi, cek_folder
 
 class QueenGUIVisual:
@@ -24,7 +28,6 @@ class QueenGUIVisual:
     }
     
     def __init__(self, root):
-        # Inisialisasi Awal
         self.root = root
         self.root.title("Penyelesaian Queens Berwarna + Animasi")
         self.root.geometry("1200x800") # formatnya ("lebarxtinggi+x+y") -> x + y itu kek lokasi
@@ -400,7 +403,7 @@ class QueenGUIVisual:
 
     def _solver_worker(self):
         try:
-            solver = QueenSolver(self.papan, self.n)
+            solver = SolverUtama(self.papan, self.n)
             def progress_callback(state_papan, kasus, posisi_queen):
                 if not self.is_solving:
                     return
@@ -507,33 +510,103 @@ class QueenGUIVisual:
         self.status_label.config(text="Proses dihentikan oleh USER")
         
         messagebox.showinfo("Stopped", "Proses berhenti.")
-       
     
-
     def _save_solution(self):
         if not self.result or not self.result.found:
+            messagebox.showwarning("Peringatan", "Belum ada solusi untuk disimpan!")
             return
         
-        filepath = filedialog.asksaveasfilename(
-            title="Save Solution",
-            defaultextension=".txt",
-            filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
+        choice = messagebox.askquestion(
+            "Format File",
+            "Simpan sebagai:\n\nYes = Text (.txt)\nNo = Gambar (.png)"
         )
         
-        if not filepath:
-            return
-        
-        try:
-            tulis_file_solusi(
-                filepath,
-                self.result.solusi,
-                self.result.waktu_eksekusi_ms,
-                self.result.jumlah_kasus
+        if choice == 'yes':
+            filepath = filedialog.asksaveasfilename(
+                title="Simpan Solusi",
+                defaultextension=".txt",
+                filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
             )
-            messagebox.showinfo("sukses", f"solsui di save ke :\n{filepath}")
-        except Exception as e:
-            messagebox.showerror("Error", f"gagal nge-save:\n{str(e)}")
-    
+            
+            if not filepath:
+                return
+            
+            try:
+                from io_code import tulis_file_solusi
+                tulis_file_solusi(
+                    filepath,
+                    self.result.solusi,
+                    self.result.waktu_eksekusi_ms,
+                    self.result.jumlah_kasus
+                )
+                messagebox.showinfo("Berhasil", f"Solusi disimpan ke:\n{filepath}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal menyimpan:\n{str(e)}")
+        
+        else:
+            filepath = filedialog.asksaveasfilename(
+                title="Simpan Gambar",
+                defaultextension=".png",
+                filetypes=[("PNG Image", "*.png"), ("JPEG Image", "*.jpg"), ("All Files", "*.*")]
+            )
+            
+            if not filepath:
+                return
+            
+            try:
+                self._save_canvas_screenshot(filepath)
+
+                messagebox.showinfo("Berhasil", f"Gambar disimpan ke:\n{filepath}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Gagal menyimpan gambar:\n{str(e)}")
+                
+    def _save_canvas_screenshot(self, filepath: str):
+        n = self.n
+        scale = 2
+        cell = self.cell_size * scale
+        img_w = n * cell
+        img_h = n * cell
+
+        from PIL import Image, ImageDraw, ImageFont
+
+        img = Image.new("RGB", (img_w, img_h), "white")
+        draw = ImageDraw.Draw(img)
+
+        try:
+            font_label = ImageFont.truetype("arialbd.ttf", int(cell * 0.2))
+            font_queen = ImageFont.truetype("arialbd.ttf", int(cell * 0.7))
+        except:
+            font_label = ImageFont.load_default()
+            font_queen = font_label
+
+        queen_positions = {
+            (int(self.canvas.coords(q)[1] // self.cell_size),
+            int(self.canvas.coords(q)[0] // self.cell_size))
+            for q in self.canvas.find_withtag("queen")
+        }
+
+        for row in range(n):
+            for col in range(n):
+                x1, y1 = col * cell, row * cell
+                x2, y2 = x1 + cell, y1 + cell
+
+                fill = self.COLORS.get(self.papan[row][col], "white")
+                draw.rectangle([x1, y1, x2, y2], fill=fill, outline="black")
+
+                draw.text((x1 + 5, y1 + 5),
+                        self.papan[row][col],
+                        fill="black",
+                        font=font_label)
+
+                if (row, col) in queen_positions:
+                    draw.text((x1 + cell//2, y1 + cell//2),
+                            "#",
+                            fill="black",
+                            font=font_queen,
+                            anchor="mm")
+
+        img.save(filepath)
+
     def _reset_papan(self):
         if self.papan is None:
             messagebox.showinfo("Info", "Papan masih kosong. Pilih file terlebih dahulu.")
@@ -596,4 +669,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

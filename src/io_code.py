@@ -7,21 +7,18 @@ def baca_file_papan(filepath: str) -> Tuple[List[List[str]], int]:
     
     with open(filepath, 'r') as file:
         lines = file.readlines()
-
     lines = [line.strip() for line in lines if line.strip()]
 
     if not lines:
         raise ValueError(f"File tidak boleh kosong!")
-    
     papan = []
     for line in lines:
         row = list(line)
         papan.append(row)
-
     n = len(papan)
     if n == 0:
         raise ValueError(f"Papan gak boleh kosong!")
-    
+
     return papan, n
 
 def tulis_file_solusi(filepath: str, solusi: List[List[str]], waktu_eksekusi_ms: float, jumlah_kasus: int):
