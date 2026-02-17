@@ -23,19 +23,13 @@ class SolverUtama:
 
 
             
-    def _permutations(self, arr:List[int]) -> List[list[int]]:
-        if len(arr)==0:
+    def _semua_kombinasi(self, panjang: int)-> List[List[int]]:
+        if panjang == 0:
             return [[]]
-        if len(arr)==1:
-            return [arr[:]]
         hasil = []
-        for i in range(len(arr)):
-            head = arr[i]
-            tail = arr[:i] + arr[i+1:]
-
-            for perm_tail in self._permutations(tail):
-                hasil.append([head] + perm_tail)
-
+        for sub in self._semua_kombinasi(panjang - 1):
+            for col in range(self.n):
+                hasil.append(sub + [col])
         return hasil
     
     def _bangun_lokasi_warna(self) -> Dict[str, List[Tuple[int, int]]]:
@@ -127,16 +121,16 @@ class SolverUtama:
         waktu_mulai = time.time()
         self.jumlah_kasus = 0
 
-        for permutasi in self._permutations(list(range(self.n))):
+        for kombinasi in self._semua_kombinasi((self.n)):
             self.jumlah_kasus+=1
-            posisi_queen = [(row, permutasi[row]) for row in range(self.n)]
+            posisi_queen = [(row, kombinasi[row]) for row in range(self.n)]
             if visual_callback:
-                self._bangun_papan_soluso(permutasi)
+                self._bangun_papan_soluso(kombinasi)
                 gambar_papan = self._papan_ke_str()
                 visual_callback(gambar_papan, self.jumlah_kasus, posisi_queen)
 
-            if self._cek_constraint(permutasi):
-                self._bangun_papan_soluso(permutasi)
+            if self._cek_constraint(kombinasi):
+                self._bangun_papan_soluso(kombinasi)
                 waktu_eksekusi_ms = (time.time()-waktu_mulai)*1000
                 return HasilSolusi(
                         solusi = self.papan_solusi,
@@ -240,7 +234,7 @@ def cek_konek_warna(papan: List[List[str]]) -> Tuple[bool, List[str]]:
     for warna, koordinats in map_warna.items():
         if len(koordinats) == 1:
             continue
-        sel_set = set(koordinats)
+        sel_unik = set(koordinats)
         visited = set()
         antrian = [koordinats[0]]
         visited.add(koordinats[0])
@@ -249,7 +243,7 @@ def cek_konek_warna(papan: List[List[str]]) -> Tuple[bool, List[str]]:
             rowA, colA = antrian.pop(0)
             for r, c in [(-1,0), (1,0), (0,-1), (0,1)]:
                 tetangga = (r+rowA, c+colA)
-                if tetangga in sel_set and tetangga not in visited:
+                if tetangga in sel_unik and tetangga not in visited:
                     visited.add(tetangga)
                     antrian.append(tetangga)
 
