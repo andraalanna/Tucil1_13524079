@@ -21,6 +21,21 @@ class SolverUtama:
 
         self.papan_solusi = [row[:] for row in papan]
 
+    def _permutations(self, arr:List[int]) -> List[list[int]]:
+        if len(arr)==0:
+            return [[]]
+        if len(arr)==1:
+            return [arr[:]]
+        hasil = []
+        for i in range(len(arr)):
+            head = arr[i]
+            tail = arr[:i] + arr[i+1:]
+
+            for perm_tail in self._permutations(tail):
+                hasil.append([head] + perm_tail)
+
+        return hasil
+    
     def _bangun_lokasi_warna(self) -> Dict[str, List[Tuple[int, int]]]:
         map_warna = {}
         for row in range(self.n):
@@ -41,6 +56,14 @@ class SolverUtama:
                 return False
             if (self.papan_awal[rowQ][colQ] == warna):
                 return False
+        return True
+    
+    def _cek_constraint(self, permutasi) -> bool:
+        posisi = []
+        for row, col in enumerate(permutasi):
+            if not self._bisa_lanjut(row,col, posisi):
+                return False
+            posisi.append((row,col))
         return True
 
     def _backtrack(self, row: int, posisi_queen: List[Tuple[int, int]], progress_callback: Optional[Callable] = None) -> bool:
@@ -70,6 +93,11 @@ class SolverUtama:
     def _papan_ke_str(self) -> str:
         return '\n'.join(''.join(row) for row in self.papan_solusi)
 
+
+    def _bangun_papan_soluso(self, permutasi):
+        self.papan_solusi = [row[:] for row in self.papan_awal]
+        for row, col, in enumerate(permutasi):
+            self.papan_solusi[row][col] ="#"
     
     def solve(self, progress_callback: Optional[Callable[[str, int], None]] = None) -> HasilSolusi:
         waktu_mulai = time.time()
@@ -77,7 +105,7 @@ class SolverUtama:
         posisi_queen = []
         result = self._backtrack(0, posisi_queen, progress_callback)
 
-        waktu_eksekusi = (time.time() - waktu_mulai) * 1000 # s ke ms
+        waktu_eksekusi = (time.time() - waktu_mulai) * 1000
         if result: 
             return HasilSolusi(
                 solusi = self.papan_solusi,
@@ -97,26 +125,30 @@ class SolverUtama:
         waktu_mulai = time.time()
         self.jumlah_kasus = 0
 
-        posisi_queen = []
-        hasil = self._backtrack_visual(0, posisi_queen, visual_callback)
+        for permutasi in self._permutations(list(range(self.n))):
+            self.jumlah_kasus+=1
+            posisi_queen = [(row, permutasi[row]) for row in range(self.n)]
+            if visual_callback:
+                self._bangun_papan_soluso(permutasi)
+                gambar_papan = self._papan_ke_str()
+                visual_callback(gambar_papan, self.jumlah_kasus, posisi_queen)
 
-        waktu_eksekusi = (time.time() - waktu_mulai) * 1000
-
-        if hasil:
-            return HasilSolusi(
-                solusi = self.papan_solusi,
-                jumlah_kasus = self.jumlah_kasus,
-                waktu_eksekusi_ms = waktu_eksekusi,
-                found = True
-            )
-        else:
-            return HasilSolusi(
-                solusi = None,
-                jumlah_kasus = self.jumlah_kasus,
-                waktu_eksekusi_ms = waktu_eksekusi,
-                found = False
-            )
-
+            if self._cek_constraint(permutasi):
+                self._bangun_papan_soluso(permutasi)
+                waktu_eksekusi_ms = (time.time()-waktu_mulai)*1000
+                return HasilSolusi(
+                        solusi = self.papan_solusi,
+                        jumlah_kasus = self.jumlah_kasus,
+                        waktu_eksekusi_ms = waktu_eksekusi_ms,
+                        found = True
+                    )
+        waktu_eksekusi_ms = (time.time() - waktu_mulai)*1000
+        return HasilSolusi(
+            solusi = None,
+            jumlah_kasus = self.jumlah_kasus,
+            waktu_eksekusi_ms = waktu_eksekusi_ms,
+            found = False
+        )
 
     def _backtrack_visual(self, row: int, posisi_queen: List[Tuple[int, int]], visual_callback: Optional[Callable] = None) -> bool:
         if row == self.n:
