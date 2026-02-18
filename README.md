@@ -7,7 +7,7 @@ Program ini adalah solver untuk **Colored Queen Problem** menggunakan algoritma 
 - Setiap ratu tidak boleh berada dalam jarak 1 cell dari ratu lain (adjacency)
 - Setiap ratu harus ditempatkan pada cell dengan warna yang memiliki ratu
 
-Program dilengkapi dengan antarmuka grafis (GUI) untuk visualisasi hasil solusi.
+Tersedia (GUI) untuk visualisasi hasil solusi.
 
 ## b. Requirement dan Instalasi
 
@@ -21,7 +21,9 @@ Program dilengkapi dengan antarmuka grafis (GUI) untuk visualisasi hasil solusi.
 
 ## c. Cara Mengkompilasi
 
-Program ini adalah program Python, tidak perlu dikompilasi. Cukup jalankan langsung dengan Python interpreter.
+Program ditulis dalam bahasa Python sehingga tidak memerlukan proses kompilasi. Program dapat langsung dijalankan menggunakan Python interpreter.
+
+Apabila diperlukan executable file, file .exe tersedia pada folder bin dan dapat langsung dijalankan tanpa instalasi tambahan.
 
 ## d. Cara Menjalankan dan Menggunakan Program
 
